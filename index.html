@@ -316,7 +316,43 @@
     #ranking-preview { margin-top: 1.5rem; }
     #ranking-preview .section-label { margin-top: 0; }
 
-    @media (max-width: 400px) {
+    /* TIMER */
+    .timer-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.75rem;
+    }
+    .timer-num {
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 18px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+    .timer-num.urgent { color: #A32D2D; }
+    .timer-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .timer-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: #185FA5;
+      transition: width 0.1s linear, background 0.3s;
+    }
+    .timer-fill.urgent { background: #A32D2D; }
+
+    /* TIMEOUT feedback */
+    .feedback-timeout {
+      background: #FAEEDA;
+      color: #633806;
+    }
+
+
       .animal-emoji { font-size: 64px; }
       .animal-name { font-size: 18px; }
       .btn-answer { font-size: 13px; padding: 12px 8px; }
@@ -330,7 +366,7 @@
   <div class="screen active" id="screen-name">
     <div class="page-header">
       <h1>¿Tiene cerebro o no?</h1>
-      <p>20 animales. 10 tienen cerebro, 10 no.<br>¿Podés distinguirlos?</p>
+      <p>20 animales. 5 segundos por pregunta.<br>¿Podés distinguir cuáles tienen cerebro?</p>
     </div>
     <div class="card">
       <label for="player-name" style="font-size:14px;color:var(--text-secondary);">Tu nombre o apodo</label>
@@ -344,6 +380,11 @@
   <div class="screen" id="screen-question">
     <div class="progress-text" id="prog-text">Pregunta 1 de 20</div>
     <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:5%"></div></div>
+
+    <div class="timer-row">
+      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      <div class="timer-num" id="timer-num">5</div>
+    </div>
 
     <div class="card animal-display">
       <span class="animal-emoji" id="q-emoji"></span>
@@ -434,6 +475,54 @@ let playerName = "";
 let answers = [];
 let shuffled = [];
 let waitingNext = false;
+let timerInterval = null;
+let timerLeft = 5;
+const TIMER_SECONDS = 5;
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function startTimer() {
+  clearTimer();
+  timerLeft = TIMER_SECONDS;
+  updateTimerUI(timerLeft);
+  timerInterval = setInterval(() => {
+    timerLeft -= 0.1;
+    updateTimerUI(timerLeft);
+    if (timerLeft <= 0) {
+      clearTimer();
+      timeOut();
+    }
+  }, 100);
+}
+
+function updateTimerUI(t) {
+  const pct = Math.max(0, (t / TIMER_SECONDS) * 100);
+  const fill = document.getElementById('timer-fill');
+  const num = document.getElementById('timer-num');
+  if (!fill || !num) return;
+  fill.style.width = pct + '%';
+  const secs = Math.ceil(Math.max(0, t));
+  num.textContent = secs;
+  const urgent = t <= 2;
+  fill.classList.toggle('urgent', urgent);
+  num.classList.toggle('urgent', urgent);
+}
+
+function timeOut() {
+  if (waitingNext) return;
+  waitingNext = true;
+  document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
+  const a = shuffled[currentIdx];
+  answers.push({ animal: a, correct: false, userSaid: null, timedOut: true });
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  const verdict = a.hasBrain ? 'Tiene cerebro.' : 'No tiene cerebro.';
+  fb.className = 'feedback feedback-timeout';
+  fb.innerHTML = `<strong>Tiempo agotado.</strong> ${verdict} ${a.fact}`;
+  document.getElementById('btn-next').style.display = 'block';
+}
 
 function shuffle(arr) {
   const a = [...arr];
@@ -479,10 +568,12 @@ function renderQuestion() {
   document.getElementById('btn-next').style.display = 'none';
   document.querySelectorAll('.btn-answer').forEach(b => b.disabled = false);
   waitingNext = false;
+  startTimer();
 }
 
 function answer(userSaysYes) {
   if (waitingNext) return;
+  clearTimer();
   waitingNext = true;
   document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
   const a = shuffled[currentIdx];
@@ -508,6 +599,7 @@ function nextQuestion() {
 }
 
 function showResult() {
+  clearTimer();
   showScreen('screen-result');
   const total = shuffled.length;
   const pct = Math.round((score / total) * 100);
@@ -525,7 +617,7 @@ function showResult() {
       <span class="result-emoji">${r.animal.emoji}</span>
       <span class="result-animal">${r.animal.name}</span>
       <span class="tag ${r.animal.hasBrain ? 'tag-yes' : 'tag-no'}">${r.animal.hasBrain ? 'Con cerebro' : 'Sin cerebro'}</span>
-      <span class="${r.correct ? 'ri-ok' : 'ri-wrong'}">${r.correct ? '✓' : '✗'}</span>
+      <span class="${r.correct ? 'ri-ok' : 'ri-wrong'}">${r.timedOut ? '⏱' : (r.correct ? '✓' : '✗')}</span>
     </div>`
   ).join('');
   saveToRanking(playerName, score, total);
