@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿Tiene cerebro o no?</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --text: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --border: rgba(0,0,0,0.12);
+      --border-secondary: rgba(0,0,0,0.22);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --blue-fill: #185FA5;
+      --blue-text: #E6F1FB;
+      --green-fill: #3B6D11;
+      --green-text: #EAF3DE;
+      --green-light: #C0DD97;
+      --green-dark: #27500A;
+      --red-fill: #A32D2D;
+      --red-text: #FCEBEB;
+      --red-light: #F7C1C1;
+      --red-dark: #791F1F;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg-secondary: #252523;
+        --text: #f0ede8;
+        --text-secondary: #a0a09a;
+        --border: rgba(255,255,255,0.1);
+        --border-secondary: rgba(255,255,255,0.2);
+        --green-light: #27500A;
+        --green-dark: #C0DD97;
+        --red-light: #791F1F;
+        --red-dark: #F7C1C1;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* HEADER */
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .page-header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* INPUTS & BUTTONS */
+    input[type="text"] {
+      width: 100%;
+      font-size: 15px;
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-secondary);
+      background: var(--bg);
+      color: var(--text);
+      margin: 12px 0;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--blue-fill);
+      box-shadow: 0 0 0 3px rgba(24,95,165,0.12);
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 11px 20px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-secondary);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      text-align: center;
+    }
+    .btn:hover { background: var(--bg-secondary); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--blue-fill);
+      color: var(--blue-text);
+      border-color: var(--blue-fill);
+    }
+    .btn-primary:hover { background: #0C447C; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 1rem; }
+    .btn-answer {
+      flex: 1;
+      font-size: 15px;
+      padding: 15px 10px;
+      font-weight: 500;
+    }
+    .btn-yes {
+      background: var(--green-fill);
+      color: var(--green-text);
+      border-color: var(--green-fill);
+    }
+    .btn-yes:hover { background: #27500A; }
+    .btn-no {
+      background: var(--red-fill);
+      color: var(--red-text);
+      border-color: var(--red-fill);
+    }
+    .btn-no:hover { background: #791F1F; }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    /* PROGRESS */
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--blue-fill);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    /* ANIMAL CARD */
+    .animal-display {
+      text-align: center;
+      padding: 1.5rem 1.25rem;
+    }
+    .animal-emoji {
+      font-size: 80px;
+      line-height: 1;
+      display: block;
+      margin-bottom: 1rem;
+    }
+    .animal-name {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .animal-hint {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* FEEDBACK */
+    .feedback {
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-top: 0.75rem;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .feedback-correct {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+    .feedback-wrong {
+      background: var(--red-light);
+      color: var(--red-dark);
+    }
+
+    /* RESULT */
+    .score-display {
+      text-align: center;
+      padding: 1.5rem 1rem 1rem;
+    }
+    .score-number {
+      font-size: 56px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1;
+    }
+    .score-denom {
+      font-size: 24px;
+      color: var(--text-secondary);
+    }
+    .score-pct {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+    .score-msg {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* RESULT LIST */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 1.25rem 0 0.5rem;
+    }
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-emoji { font-size: 20px; min-width: 28px; text-align: center; }
+    .result-animal { flex: 1; color: var(--text); }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .tag-yes { background: var(--green-light); color: var(--green-dark); }
+    .tag-no { background: var(--red-light); color: var(--red-dark); }
+    .ri-ok { color: var(--green-fill); font-weight: 500; font-size: 15px; }
+    .ri-wrong { color: var(--red-fill); font-weight: 500; font-size: 15px; }
+
+    /* RANKING TABLE */
+    .ranking-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 6px 8px;
+      border-bottom: 0.5px solid var(--border);
+    }
+    tbody td {
+      padding: 9px 8px;
+      border-bottom: 0.5px solid var(--border);
+      color: var(--text);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr.highlight { background: var(--bg-secondary); }
+
+    .btn-row-bottom { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .btn-row-bottom .btn { flex: 1; width: auto; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* RANKING PREVIEW en pantalla inicio */
+    #ranking-preview { margin-top: 1.5rem; }
+    #ranking-preview .section-label { margin-top: 0; }
+
+    @media (max-width: 400px) {
+      .animal-emoji { font-size: 64px; }
+      .animal-name { font-size: 18px; }
+      .btn-answer { font-size: 13px; padding: 12px 8px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- PANTALLA 0: INICIO / NOMBRE -->
+  <div class="screen active" id="screen-name">
+    <div class="page-header">
+      <h1>¿Tiene cerebro o no?</h1>
+      <p>20 animales. 10 tienen cerebro, 10 no.<br>¿Podés distinguirlos?</p>
+    </div>
+    <div class="card">
+      <label for="player-name" style="font-size:14px;color:var(--text-secondary);">Tu nombre o apodo</label>
+      <input type="text" id="player-name" placeholder="Ej: Caro, Equipo 3, ..." maxlength="28" autocomplete="off" />
+      <button class="btn btn-primary" onclick="startGame()">Empezar el juego</button>
+    </div>
+    <div id="ranking-preview"></div>
+  </div>
+
+  <!-- PANTALLA 1: PREGUNTA -->
+  <div class="screen" id="screen-question">
+    <div class="progress-text" id="prog-text">Pregunta 1 de 20</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:5%"></div></div>
+
+    <div class="card animal-display">
+      <span class="animal-emoji" id="q-emoji"></span>
+      <div class="animal-name" id="q-name"></div>
+      <div class="animal-hint" id="q-hint"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-answer btn-yes" onclick="answer(true)">Tiene cerebro</button>
+      <button class="btn btn-answer btn-no" onclick="answer(false)">No tiene cerebro</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <button class="btn" id="btn-next" onclick="nextQuestion()" style="display:none;margin-top:10px;">Siguiente →</button>
+  </div>
+
+  <!-- PANTALLA 2: RESULTADO -->
+  <div class="screen" id="screen-result">
+    <div class="card score-display">
+      <div class="score-number" id="final-score-num"></div>
+      <div class="score-pct" id="final-score-pct"></div>
+      <div class="score-msg" id="final-msg"></div>
+    </div>
+
+    <div class="section-label">Tus respuestas</div>
+    <div class="card" style="padding: 0.75rem 1.25rem;">
+      <div id="result-list"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="showRanking()" style="margin-top:1rem;">Ver ranking de clase</button>
+    <button class="btn" onclick="playAgain()" style="margin-top:10px;">Jugar de nuevo</button>
+  </div>
+
+  <!-- PANTALLA 3: RANKING -->
+  <div class="screen" id="screen-ranking">
+    <div class="ranking-header">
+      <h1 style="font-size:20px;font-weight:500;">Ranking de clase</h1>
+    </div>
+    <div class="card" style="padding: 0.5rem 1.25rem;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px;">#</th>
+            <th>Nombre</th>
+            <th style="width:70px;">Puntos</th>
+            <th style="width:50px;">%</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-body"></tbody>
+      </table>
+      <div id="ranking-empty" class="empty-state" style="display:none;">Todavía no hay resultados.</div>
+    </div>
+    <div class="btn-row-bottom">
+      <button class="btn btn-secondary" onclick="goHome()">← Inicio</button>
+      <button class="btn btn-secondary" onclick="confirmReset()">Borrar ranking</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ANIMALS = [
+  { name: "Medusa (aguaviva)", emoji: "🪼", hasBrain: false, hint: "Cnidario marino", fact: "No tiene cerebro ni sistema nervioso central, solo una red nerviosa difusa distribuida por todo el cuerpo." },
+  { name: "Pulpo", emoji: "🐙", hasBrain: true, hint: "Molusco cefalópodo", fact: "Tiene un cerebro centralizado con lóbulos especializados, y neuronas adicionales en cada tentáculo. Capaz de resolver problemas y usar herramientas." },
+  { name: "Esponja de mar", emoji: "🧽", hasBrain: false, hint: "Porífero", fact: "Es el animal más simple: no tiene ningún tipo de célula nerviosa. Filtra el agua sin ningún control neural." },
+  { name: "Hormiga", emoji: "🐜", hasBrain: true, hint: "Insecto himenóptero", fact: "Tiene un ganglio supraaesofágico (cerebro primitivo) que le permite navegar, comunicarse y coordinar colonias complejas." },
+  { name: "Coral", emoji: "🪸", hasBrain: false, hint: "Cnidario colonial", fact: "Los pólipos tienen una red nerviosa simple sin ningún ganglio centralizado. Reaccionan a la luz y al tacto de forma refleja." },
+  { name: "Rana", emoji: "🐸", hasBrain: true, hint: "Anfibio anuro", fact: "Como todos los vertebrados, tiene un cerebro diferenciado con hemisferios, cerebelo y bulbo raquídeo que controla su comportamiento." },
+  { name: "Estrella de mar", emoji: "⭐", hasBrain: false, hint: "Equinodermo", fact: "Tiene un anillo nervioso central y nervios radiales en cada brazo, pero no hay estructura que integre información como un cerebro." },
+  { name: "Abeja", emoji: "🐝", hasBrain: true, hint: "Insecto apídeo", fact: "Su cerebro de apenas 1 mg le permite aprender rutas florales, reconocer caras humanas y comunicar ubicaciones con danzas." },
+  { name: "Ostra", emoji: "🦪", hasBrain: false, hint: "Molusco bivalvo", fact: "Tiene tres pares de ganglios pero sin integración central real. Abre y cierra la valva ante estímulos de forma refleja." },
+  { name: "Pulga de agua (Daphnia)", emoji: "🦐", hasBrain: true, hint: "Crustáceo microscópico", fact: "Tiene un ganglio supraaesofágico que procesa información visual y de orientación, coordinando su movimiento en el agua." },
+  { name: "Tenia (solitaria)", emoji: "🪱", hasBrain: false, hint: "Platelminto parásito", fact: "Tiene estructuras nerviosas mínimas en el escólex. Sin cerebro funcional, vive parasitando sin necesidad de procesar el ambiente." },
+  { name: "Pez payaso", emoji: "🐠", hasBrain: true, hint: "Actinopterígio marino", fact: "Como todos los vertebrados, tiene un cerebro bien desarrollado. Reconoce a sus compañeros de anémona y tiene jerarquías sociales complejas." },
+  { name: "Planaria", emoji: "🐛", hasBrain: false, hint: "Platelminto de agua dulce", fact: "Tiene ganglios cefálicos simples, considerados una de las estructuras nerviosas más primitivas. No llega a ser un cerebro integrador." },
+  { name: "Calamar gigante", emoji: "🦑", hasBrain: true, hint: "Molusco cefalópodo", fact: "Tiene el cerebro más voluminoso entre los invertebrados, con lóbulos especializados para procesar visión y coordinar movimientos complejos." },
+  { name: "Hidra", emoji: "💧", hasBrain: false, hint: "Cnidario de agua dulce", fact: "Solo tiene una red nerviosa difusa sin ningún ganglio centralizado. Puede regenerarse completamente a partir de fragmentos." },
+  { name: "Cucaracha", emoji: "🪳", hasBrain: true, hint: "Insecto blátodo", fact: "Tiene un ganglio cerebral y varios ganglios segmentarios. Por eso puede sobrevivir días sin cabeza: los otros ganglios siguen controlando el cuerpo." },
+  { name: "Vieira (Pecten)", emoji: "🐚", hasBrain: false, hint: "Molusco bivalvo nadador", fact: "Tiene hasta 200 ojos simples en el manto, pero su procesamiento nervioso es básico y sin integración central. Nada escapando por reflejo." },
+  { name: "Caracol", emoji: "🐌", hasBrain: true, hint: "Molusco gasterópodo", fact: "Tiene ganglios cerebroides fusionados que forman un cerebro primitivo. Puede aprender condicionamiento clásico y recordar experiencias por días." },
+  { name: "Erizo de mar", emoji: "🦔", hasBrain: false, hint: "Equinodermo", fact: "Tiene un anillo nervioso y nervios radiales, similar a la estrella de mar. Sin cerebro que integre información del entorno." },
+  { name: "Langosta de mar", emoji: "🦞", hasBrain: true, hint: "Crustáceo decápodo", fact: "Tiene un ganglio cerebral bien desarrollado y sistema nervioso ventral segmentario que coordina locomoción, alimentación y comportamiento social." },
+];
+
+let currentIdx = 0;
+let score = 0;
+let playerName = "";
+let answers = [];
+let shuffled = [];
+let waitingNext = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startGame() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) {
+    document.getElementById('player-name').focus();
+    document.getElementById('player-name').style.borderColor = '#A32D2D';
+    return;
+  }
+  playerName = name;
+  shuffled = shuffle(ANIMALS);
+  currentIdx = 0;
+  score = 0;
+  answers = [];
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const a = shuffled[currentIdx];
+  document.getElementById('prog-text').textContent = `Pregunta ${currentIdx + 1} de ${shuffled.length}`;
+  document.getElementById('prog-fill').style.width = `${(currentIdx / shuffled.length) * 100}%`;
+  document.getElementById('q-emoji').textContent = a.emoji;
+  document.getElementById('q-name').textContent = a.name;
+  document.getElementById('q-hint').textContent = a.hint;
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none';
+  fb.className = 'feedback';
+  document.getElementById('btn-next').style.display = 'none';
+  document.querySelectorAll('.btn-answer').forEach(b => b.disabled = false);
+  waitingNext = false;
+}
+
+function answer(userSaysYes) {
+  if (waitingNext) return;
+  waitingNext = true;
+  document.querySelectorAll('.btn-answer').forEach(b => b.disabled = true);
+  const a = shuffled[currentIdx];
+  const correct = userSaysYes === a.hasBrain;
+  if (correct) score++;
+  answers.push({ animal: a, correct, userSaid: userSaysYes });
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  const verdict = a.hasBrain ? 'Sí tiene cerebro.' : 'No tiene cerebro.';
+  const icon = correct ? '✓' : '✗';
+  fb.className = 'feedback ' + (correct ? 'feedback-correct' : 'feedback-wrong');
+  fb.innerHTML = `<strong>${icon} ${verdict}</strong> ${a.fact}`;
+  document.getElementById('btn-next').style.display = 'block';
+}
+
+function nextQuestion() {
+  currentIdx++;
+  if (currentIdx >= shuffled.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  showScreen('screen-result');
+  const total = shuffled.length;
+  const pct = Math.round((score / total) * 100);
+  document.getElementById('final-score-num').textContent = `${score} / ${total}`;
+  document.getElementById('final-score-pct').textContent = `${pct}% de respuestas correctas`;
+  let msg = '';
+  if (pct >= 90) msg = '¡Excelente! Dominás los sistemas nerviosos de punta a punta.';
+  else if (pct >= 75) msg = 'Muy bien. Conocés bastante sobre qué animales tienen cerebro.';
+  else if (pct >= 55) msg = 'No está mal. Hay algunos grupos que vale la pena repasar.';
+  else msg = 'Hay bastante para repasar sobre sistemas nerviosos. ¡Dale otra vuelta!';
+  document.getElementById('final-msg').textContent = msg;
+  const list = document.getElementById('result-list');
+  list.innerHTML = answers.map(r =>
+    `<div class="result-item">
+      <span class="result-emoji">${r.animal.emoji}</span>
+      <span class="result-animal">${r.animal.name}</span>
+      <span class="tag ${r.animal.hasBrain ? 'tag-yes' : 'tag-no'}">${r.animal.hasBrain ? 'Con cerebro' : 'Sin cerebro'}</span>
+      <span class="${r.correct ? 'ri-ok' : 'ri-wrong'}">${r.correct ? '✓' : '✗'}</span>
+    </div>`
+  ).join('');
+  saveToRanking(playerName, score, total);
+}
+
+function playAgain() {
+  showScreen('screen-name');
+  loadRankingPreview();
+}
+
+function goHome() {
+  showScreen('screen-name');
+  loadRankingPreview();
+}
+
+/* ---- RANKING (localStorage) ---- */
+function getRanking() {
+  try { return JSON.parse(localStorage.getItem('cerebro_ranking_v2') || '[]'); } catch { return []; }
+}
+
+function saveToRanking(name, pts, total) {
+  let r = getRanking();
+  r.push({ name, pts, total, pct: Math.round((pts / total) * 100), date: new Date().toLocaleDateString('es-AR') });
+  r.sort((a, b) => b.pts - a.pts || b.pct - a.pct || a.name.localeCompare(b.name));
+  if (r.length > 100) r = r.slice(0, 100);
+  try { localStorage.setItem('cerebro_ranking_v2', JSON.stringify(r)); } catch {}
+}
+
+function showRanking() {
+  const r = getRanking();
+  const medals = ['🥇', '🥈', '🥉'];
+  const tbody = document.getElementById('ranking-body');
+  const empty = document.getElementById('ranking-empty');
+  if (r.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = r.map((e, i) =>
+      `<tr ${e.name === playerName ? 'class="highlight"' : ''}>
+        <td>${medals[i] !== undefined ? medals[i] : (i + 1)}</td>
+        <td>${e.name}</td>
+        <td>${e.pts} / ${e.total}</td>
+        <td>${e.pct}%</td>
+      </tr>`
+    ).join('');
+  }
+  showScreen('screen-ranking');
+}
+
+function confirmReset() {
+  if (!confirm('¿Borrar todo el ranking? Esta acción no se puede deshacer.')) return;
+  try { localStorage.removeItem('cerebro_ranking_v2'); } catch {}
+  showRanking();
+}
+
+function loadRankingPreview() {
+  const r = getRanking();
+  const el = document.getElementById('ranking-preview');
+  if (r.length === 0) { el.innerHTML = ''; return; }
+  const medals = ['🥇', '🥈', '🥉'];
+  const rows = r.slice(0, 5).map((e, i) =>
+    `<tr>
+      <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);color:var(--text);">${medals[i] || (i+1)}</td>
+      <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);color:var(--text);">${e.name}</td>
+      <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);color:var(--text);">${e.pts}/${e.total}</td>
+      <td style="padding:7px 8px;border-bottom:0.5px solid var(--border);color:var(--text);">${e.pct}%</td>
+    </tr>`
+  ).join('');
+  el.innerHTML = `
+    <div class="section-label">Ranking actual</div>
+    <div class="card" style="padding:0.25rem 1.25rem;">
+      <table>
+        <thead><tr>
+          <th style="width:36px;">#</th><th>Nombre</th><th>Puntos</th><th>%</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <button class="btn btn-secondary" onclick="showRanking()" style="margin-top:10px;">Ver ranking completo</button>`;
+}
+
+/* init */
+loadRankingPreview();
+document.getElementById('player-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startGame();
+});
+</script>
+</body>
+</html>
